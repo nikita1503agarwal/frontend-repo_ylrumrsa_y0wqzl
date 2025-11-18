@@ -40,7 +40,7 @@ export default function Hero() {
       />
 
       {/* Centerpiece */}
-      <div className="relative z-10 h-screen w-full flex items-center justify-center">
+      <div className="relative z-0 h-screen w-full flex items-center justify-center">
         <div className="relative w-[540px] max-w-[92vw] aspect-square">
           {/* Hand-drawn ring (uneven) */}
           <AnimatePresence>
@@ -48,7 +48,7 @@ export default function Hero() {
               <motion.svg
                 key="ring"
                 viewBox="0 0 100 100"
-                className="absolute inset-0 w-full h-full"
+                className="absolute inset-0 w-full h-full z-[1]"
                 initial={{ scale: 1.4, opacity: 0 }}
                 animate={{ scale: 1.0, opacity: 1 }}
                 transition={{ duration: 1.8, ease: [0.33, 0, 0.2, 1] }}
@@ -63,13 +63,18 @@ export default function Hero() {
             {phase >= 1 && (
               <motion.div
                 key="phrase"
-                className="absolute inset-0 grid place-items-center px-6"
+                className="absolute inset-0 grid place-items-center px-6 z-10"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
-                <FlickerLine text="Sin is the truest luxury." />
+                <div
+                  className="w-full mx-auto text-center"
+                  style={{ maxWidth: 'min(60vw, 900px)' }}
+                >
+                  <FlickerLine text="Sin is the truest luxury." />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -79,7 +84,7 @@ export default function Hero() {
             {phase >= 2 && (
               <motion.div
                 key="skull"
-                className="absolute inset-0 grid place-items-center"
+                className="absolute inset-0 grid place-items-center z-[2]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -95,7 +100,7 @@ export default function Hero() {
             {phase >= 3 && (
               <motion.div
                 key="invitation"
-                className="absolute inset-0 flex items-end justify-center pb-10"
+                className="absolute inset-0 flex items-end justify-center pb-10 z-[3]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
@@ -146,37 +151,60 @@ function FlickerLine({ text }) {
     return idx
   }, [chars])
 
+  // Determine where to break for mobile-only: before the word "luxury."
+  const breakWord = 'luxury.'
+  const breakIndex = text.indexOf(breakWord)
+  const spaceBeforeBreak = breakIndex > 0 ? breakIndex - 1 : -1
+
   return (
     <div className="text-center leading-tight">
       <motion.div
-        className="font-cinzel text-[48px] sm:text-[60px] md:text-[76px] tracking-[0.02em]"
+        className="font-cinzel tracking-[0.08em] whitespace-normal sm:whitespace-nowrap inline-block"
         aria-label={text}
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.035 } } }}
+        style={{
+          // 20% smaller and responsive; keep within 3–8vw band
+          fontSize: 'clamp(22px, 4vw, 64px)',
+          maxWidth: '100%'
+        }}
       >
-        {chars.map((ch, i) => (
-          <motion.span
-            key={i}
-            variants={{
-              hidden: { opacity: 0, filter: 'blur(6px)', y: 6 },
-              visible: {
-                opacity: 1,
-                filter: 'blur(0px)',
-                y: 0,
-                transition: {
-                  delay: 0.1 + order.indexOf(i) * 0.02,
-                  duration: 0.28,
-                  ease: 'easeOut'
-                }
-              }
-            }}
-            className="inline-block align-baseline"
-            style={{ color: '#e8e6e3' }}
-          >
-            {ch}
-          </motion.span>
-        ))}
+        {chars.map((ch, i) => {
+          const isPreBreakSpace = i === spaceBeforeBreak && ch === ' '
+          const isBreakStart = i === breakIndex
+
+          return (
+            <span key={i} className="inline-block align-baseline relative">
+              {/* Hide the space at line-break on mobile to avoid leading space */}
+              {isPreBreakSpace ? (
+                <span className="hidden sm:inline"> </span>
+              ) : null}
+
+              {/* Insert a manual line break on mobile only, before the word "luxury." */}
+              {isBreakStart ? <br className="sm:hidden" /> : null}
+
+              <motion.span
+                variants={{
+                  hidden: { opacity: 0, filter: 'blur(6px)', y: 6 },
+                  visible: {
+                    opacity: 1,
+                    filter: 'blur(0px)',
+                    y: 0,
+                    transition: {
+                      delay: 0.1 + order.indexOf(i) * 0.02,
+                      duration: 0.28,
+                      ease: 'easeOut'
+                    }
+                  }
+                }}
+                style={{ color: '#e8e6e3' }}
+              >
+                {isPreBreakSpace ? '' : ch}
+              </motion.span>
+            </span>
+          )
+        })}
       </motion.div>
     </div>
   )

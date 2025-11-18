@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
 
 const GOLD = 'var(--gold)'
 
 export default function Hero() {
-  // Phases: 0 velvet black, 1 ring tighten + phrase, 2 skull draw, 3 invitation
+  // Phases: 0 velvet black, 1 ring tighten + phrase, 2 skull draw
   const [phase, setPhase] = useState(0)
 
   // Begin on mount: schedule phase progressions
@@ -16,7 +15,6 @@ export default function Hero() {
     // Progression timings (ms)
     timers.push(setTimeout(() => setPhase(1), 600)) // ring appears
     timers.push(setTimeout(() => setPhase(2), 3000)) // skull forms
-    timers.push(setTimeout(() => setPhase(3), 5600)) // invitation appears
     return () => timers.forEach(clearTimeout)
   }, [])
 
@@ -58,7 +56,7 @@ export default function Hero() {
             )}
           </AnimatePresence>
 
-          {/* Sentence ignition as smoke/embers */}
+          {/* Sentence ignition as smoke/embers (letter-by-letter reveal, not typewriter) */}
           <AnimatePresence>
             {phase >= 1 && (
               <motion.div
@@ -91,32 +89,6 @@ export default function Hero() {
                 transition={{ duration: 0.6 }}
               >
                 <SkullRevelation />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Cardinal glyphs + Invitation */}
-          <AnimatePresence>
-            {phase >= 3 && (
-              <motion.div
-                key="invitation"
-                className="absolute inset-0 flex items-end justify-center pb-10 z-[3]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8 }}
-              >
-                <div className="w-full flex flex-col items-center gap-6">
-                  <Glyphs />
-                  <div className="text-center">
-                    <p className="font-cinzel italic text-[18px] sm:text-[20px] text-neutral-300/90 tracking-wide">
-                      The senses are gates. Choose which you open.
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                    <GhostButton to="/collection" label="SEE THE FRAGRANCES" />
-                    <GhostButton to="/oath" label="READ THE OATH" />
-                  </div>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -268,40 +240,6 @@ function Stroke({ d, delay = 0 }) {
       }}
       transition={{ duration: 0.7, delay, ease: 'easeOut' }}
     />
-  )
-}
-
-function Glyphs() {
-  return (
-    <div className="relative w-full max-w-[540px]">
-      {/* positions along the rim using absolute offsets */}
-      <div className="absolute left-1/2 -translate-x-1/2 -top-6 text-center">
-        <p className="text-[11px] tracking-[0.3em] text-neutral-400">NORTH — Ἁμαρτία</p>
-      </div>
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 text-right">
-        <p className="text-[11px] tracking-[0.3em] text-neutral-400">EAST — Ἀλαζονεία</p>
-      </div>
-      <div className="absolute left-1/2 -translate-x-1/2 -bottom-6 text-center">
-        <p className="text-[11px] tracking-[0.3em] text-neutral-400">SOUTH — Φθόνος</p>
-      </div>
-    </div>
-  )
-}
-
-function GhostButton({ to, label }) {
-  return (
-    <Link
-      to={to}
-      className="relative inline-flex items-center justify-center px-7 py-3 text-[12px] tracking-[0.28em] uppercase border gold-border text-neutral-200"
-      style={{ borderColor: 'var(--gold)' }}
-    >
-      <span className="absolute inset-0 pointer-events-none transition-opacity duration-200 opacity-0" style={{ boxShadow: '0 0 24px rgba(201,166,97,0.35)'}} />
-      <span className="relative z-10" style={{ color: '#e8e6e3' }}>{label}</span>
-      <span className="absolute left-0 right-0 bottom-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,166,97,0.9), transparent)'}} />
-      <style>{`
-        a:hover > span:first-child { opacity: 1; }
-      `}</style>
-    </Link>
   )
 }
 

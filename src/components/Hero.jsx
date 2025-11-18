@@ -70,7 +70,7 @@ export default function Hero() {
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
                 <div
-                  className="w-full mx-auto text-center"
+                  className="w-full mx-auto text-center overflow-hidden px-6"
                   style={{ maxWidth: 'min(60vw, 900px)' }}
                 >
                   <FlickerLine text="Sin is the truest luxury." />
@@ -140,68 +140,85 @@ function UnevenRing() {
 }
 
 function FlickerLine({ text }) {
-  const chars = useMemo(() => text.split(''), [text])
-  const order = useMemo(() => {
-    // randomized reveal order (out of sequence)
-    const idx = chars.map((_, i) => i)
+  // Tokenize into words and spaces, so spaces are preserved as raw text (not animated spans)
+  const tokens = useMemo(() => text.match(/\S+|\s+/g) || [text], [text])
+
+  // randomized reveal order by letter index across all letters (spaces excluded)
+  const letterOrder = useMemo(() => {
+    const idx = []
+    let count = 0
+    tokens.forEach(tok => {
+      if (!/^\s+$/.test(tok)) {
+        for (let i = 0; i < tok.length; i++) idx.push(count++)
+      }
+    })
     for (let i = idx.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[idx[i], idx[j]] = [idx[j], idx[i]]
     }
     return idx
-  }, [chars])
+  }, [tokens])
 
-  // Determine where to break for mobile-only: before the word "luxury."
+  // Index lookup helper
+  let globalLetterIndex = 0
+
+  // Mobile-only manual break before the word "luxury."
   const breakWord = 'luxury.'
-  const breakIndex = text.indexOf(breakWord)
-  const spaceBeforeBreak = breakIndex > 0 ? breakIndex - 1 : -1
 
   return (
     <div className="text-center leading-tight">
       <motion.div
-        className="font-cinzel tracking-[0.08em] whitespace-normal sm:whitespace-nowrap inline-block"
+        className="font-cinzel sm:whitespace-nowrap whitespace-pre-line inline-block"
         aria-label={text}
         initial="hidden"
         animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.035 } } }}
+        variants={{ visible: { transition: { staggerChildren: 0.0 } } }}
         style={{
-          // 20% smaller and responsive; keep within 3–8vw band
           fontSize: 'clamp(22px, 4vw, 64px)',
-          maxWidth: '100%'
+          letterSpacing: '0.08em',
+          wordSpacing: '0.25em',
+          maxWidth: '100%',
+          textAlign: 'center'
         }}
       >
-        {chars.map((ch, i) => {
-          const isPreBreakSpace = i === spaceBeforeBreak && ch === ' '
-          const isBreakStart = i === breakIndex
+        {tokens.map((tok, tIdx) => {
+          const isSpace = /^\s+$/.test(tok)
+          if (isSpace) {
+            // return raw space so word-spacing can apply
+            return tok
+          }
+
+          const insertBreak = tok === breakWord
 
           return (
-            <span key={i} className="inline-block align-baseline relative">
-              {/* Hide the space at line-break on mobile to avoid leading space */}
-              {isPreBreakSpace ? (
-                <span className="hidden sm:inline"> </span>
-              ) : null}
-
-              {/* Insert a manual line break on mobile only, before the word "luxury." */}
-              {isBreakStart ? <br className="sm:hidden" /> : null}
-
-              <motion.span
-                variants={{
-                  hidden: { opacity: 0, filter: 'blur(6px)', y: 6 },
-                  visible: {
-                    opacity: 1,
-                    filter: 'blur(0px)',
-                    y: 0,
-                    transition: {
-                      delay: 0.1 + order.indexOf(i) * 0.02,
-                      duration: 0.28,
-                      ease: 'easeOut'
-                    }
-                  }
-                }}
-                style={{ color: '#e8e6e3' }}
-              >
-                {isPreBreakSpace ? '' : ch}
-              </motion.span>
+            <span key={`w-${tIdx}`} className="inline">
+              {insertBreak && <br className="sm:hidden" />}
+              {/* animate each letter inside the word */}
+              {Array.from(tok).map((ch, i) => {
+                const myIndex = globalLetterIndex++
+                const delayIndex = letterOrder.indexOf(myIndex)
+                return (
+                  <motion.span
+                    key={`l-${tIdx}-${i}`}
+                    variants={{
+                      hidden: { opacity: 0, filter: 'blur(6px)', y: 6 },
+                      visible: {
+                        opacity: 1,
+                        filter: 'blur(0px)',
+                        y: 0,
+                        transition: {
+                          delay: 0.1 + delayIndex * 0.02,
+                          duration: 0.28,
+                          ease: 'easeOut'
+                        }
+                      }
+                    }}
+                    style={{ color: '#e8e6e3' }}
+                  >
+                    {ch}
+                  </motion.span>
+                )
+              })}
             </span>
           )
         })}

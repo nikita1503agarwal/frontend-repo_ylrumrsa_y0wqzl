@@ -3,7 +3,14 @@
 > vite
 
 
-  VITE v5.4.20  ready in 335 ms
+  VITE v5.4.20  ready in 336 ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://172.20.60.157:3000/
+[vite:css] @import must precede all other statements (besides @charset or empty @layer)
+4  |  
+5  |  /* Cinzel for ceremonial typography */
+6  |  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7  |  
+8  |  @layer base {
